@@ -66,7 +66,7 @@ if (USE_ISS)
   include_directories(./external_packages/iSS ./external_packages/iSS/src)
 endif (USE_ISS)
 
-# SMASH afterburner. Turn on with 'cmake -DUSE_MUSIC=ON -DUSE_ISS=ON -Dsmash=ON'.
+# SMASH afterburner. Turn on with 'cmake -DUSE_MUSIC=ON -DUSE_ISS=ON -DUSE_SMASH=ON'.
 option(USE_SMASH "Build tests for SMASH" OFF)
 if (USE_SMASH)
   message("SMASH includes and library ...")
@@ -152,6 +152,8 @@ install(
   "${CMAKE_SOURCE_DIR}/src/hydro/"
   "${CMAKE_SOURCE_DIR}/src/afterburner/"
   "${CMAKE_SOURCE_DIR}/src/jet/"
+  "${CMAKE_SOURCE_DIR}/src/jet/Tequila"
+  "${CMAKE_SOURCE_DIR}/src/tools/"
   "${CMAKE_SOURCE_DIR}/src/reader/"
   # external packages
   "${CMAKE_SOURCE_DIR}/external_packages/"
@@ -176,6 +178,7 @@ install(
   PATTERN "data_table" EXCLUDE
   PATTERN "LBT-tables" EXCLUDE
   PATTERN "Martini" EXCLUDE
+  PATTERN "Tequila" EXCLUDE
   PATTERN "googletest" EXCLUDE
   )
 
@@ -296,6 +299,8 @@ include_directories(./src/hydro )
 include_directories(./src/hadronization )
 include_directories(./src/afterburner )
 include_directories(./src/jet )
+include_directories(./src/jet/Tequila )
+include_directories(./src/tools )
 include_directories(./src/reader )
 include_directories(./external_packages/)
 include_directories(./external_packages/gtl/include )
