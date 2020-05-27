@@ -1,0 +1,3 @@
+1) Build JETSCAPE
+2) Copy "jetscape_user.xml" and "music_input"
+3) ./runJetscape jetscape_user.xml
