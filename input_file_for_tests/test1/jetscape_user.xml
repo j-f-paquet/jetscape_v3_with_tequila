@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+
+<jetscape>
+
+  <debug> on </debug>
+  <remark> off </remark>
+  <vlevel> 0 </vlevel>
+  
+  <nEvents> 200 </nEvents>
+  
+  <JetScapeWriterAscii> on </JetScapeWriterAscii>
+  
+  <ReuseHydro> True </ReuseHydro>
+  <nReuseHydro> 100000 </nReuseHydro>
+  <Random>
+    <seed>1</seed>
+  </Random>
+
+  <!-- Inital State Module  -->
+  <IS>
+    <!-- x range [-grid_max_x, grid_max_x] -->
+    <!-- y range [-grid_max_y, grid_max_y]-->
+    <!-- longitudinal range [-grid_max_z, grid_max_z]-->
+    <!-- in units of [fm] -->
+    <grid_max_x> 15 </grid_max_x>
+    <grid_max_y> 15 </grid_max_y>
+    <grid_max_z> 0.0 </grid_max_z>
+    <grid_step_x> 0.3 </grid_step_x>
+    <grid_step_y> 0.3 </grid_step_y>
+    <grid_step_z> 0.3 </grid_step_z>
+
+    <Trento> 
+                <PhysicsInputs  projectile='Au'
+                                                target='Au'
+                                                sqrts='200'
+                                                cross-section='4.2'
+                                                normalization='13.'>
+                </PhysicsInputs>
+                <CutInputs      centrality-low='10'
+                                        centrality-high='20'>
+                </CutInputs>
+                <!--
+                                        centrality-high='100' b-min='5' b-max='5.01'>
+                'normalization':13.,
+                'reduced-thickness':0.1,
+                'fluctuation':0.9,
+                'nucleon-min-dist':0.4,
+                'cross-section':4.2, # in fermi
+                'nucleon-width':0.8,
+                'b-min':5,
+                'b-max':5.01,
+                'random-seed':1
+                -->
+                <TransInputs    reduced-thickness='0.1'
+                                                fluctuation="0.9"
+                                                nucleon-width="0.8"
+                                                nucleon-min-dist="0.4">
+                </TransInputs>
+                <LongiInputs    mean-coeff="0.0"
+                                                std-coeff="100.0"
+                                                skew-coeff="0.0"
+                                                skew-type="1"
+                                                jacobian="0.8">
+                </LongiInputs>
+
+
+    </Trento>
+  </IS>
+  
+  <!-- Hard Process -->
+  <Hard>
+    <PythiaGun>
+      <pTHatMin>50</pTHatMin>
+      <pTHatMax>70</pTHatMax>
+      <eCM>200</eCM>
+      <FSR_on>0</FSR_on>
+    </PythiaGun>
+  </Hard>
+  
+  <!--Preequilibrium Dynamics Module -->
+  <Preequilibrium>
+    <NullPreDynamics> </NullPreDynamics>
+  </Preequilibrium>
+  
+  <!-- Hydro  Module  -->
+  <Hydro>
+    <!-- MUSIC  -->
+    <MUSIC>
+      <name>MUSIC</name>
+      <MUSIC_input_file>music_input</MUSIC_input_file>
+      <output_evolution_to_file>1</output_evolution_to_file>
+      <freezeout_temperature>-1</freezeout_temperature>
+      <Perform_CooperFrye_Feezeout>0</Perform_CooperFrye_Feezeout>
+    </MUSIC>
+  </Hydro>
+  
+  <!--Eloss Modules -->
+  <Eloss>
+
+    <deltaT>0.01</deltaT>
+
+    <Matter>
+      <in_vac> 1 </in_vac>
+      <Q0> 1.0 </Q0>
+    </Matter>
+    <Martini>
+      <name > Martini </name>
+      <Q0> 1.0 </Q0>
+      <alpha_s> 0.3 </alpha_s>
+      <pcut> 2.0 </pcut>
+      <hydro_Tc> 0.16 </hydro_Tc>
+      <path>../src/jet/Martini/</path>
+    </Martini>
+
+  </Eloss>
+  
+  <!-- Jet Hadronization Module -->
+  <JetHadronization>
+    <name>colorless</name>
+  </JetHadronization>
+
+</jetscape>
