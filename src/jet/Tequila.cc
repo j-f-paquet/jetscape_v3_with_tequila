@@ -66,12 +66,6 @@ Tequila::Tequila() {
   SetId("Tequila");
   VERBOSE(8);
 
-  //vectors for elastic rates:
-  dGamma_qq = new vector<double>;
-  dGamma_qg = new vector<double>;
-  dGamma_qq_q = new vector<double>;
-  dGamma_qg_q = new vector<double>;
-
   // create and set Tequila Mutex
   auto tequila_mutex = make_shared<TequilaMutex>();
   SetMutex(tequila_mutex);
@@ -79,45 +73,91 @@ Tequila::Tequila() {
 
 Tequila::~Tequila() { VERBOSE(8); }
 
+void Tequila::Finish()
+{
+    free(za); 
+    delete[] rate_ggg_p; 
+    delete[] rate_gqq_p;
+    delete[] rate_qqg_p;
+    for(int ip=0;ip<nb_points_in_p; ip++)
+    {
+        for(int iomega=0;iomega<nb_points_in_omega; iomega++) 
+        {
+            delete[] differential_rate_ggg_p_omega_qperp[ip][iomega]; 
+            delete[] differential_rate_gqq_p_omega_qperp[ip][iomega];
+            delete[] differential_rate_qqg_p_omega_qperp[ip][iomega];
+        }
+        delete[] differential_rate_ggg_p_omega_qperp[ip];
+        delete[] differential_rate_gqq_p_omega_qperp[ip];
+        delete[] differential_rate_qqg_p_omega_qperp[ip];
+    }
+    delete[] differential_rate_ggg_p_omega_qperp;
+    delete[] differential_rate_gqq_p_omega_qperp;
+    delete[] differential_rate_qqg_p_omega_qperp;
+}
+
 void Tequila::Init() {
-  JSINFO << "Intialize Tequila ...";
 
-  double deltaT = 0.0;
-  double Tequila_deltaT_Max = 0.03 + rounding_error;
+    JSINFO<<"Intialize Tequila ...";
 
-  deltaT = GetXMLElementDouble({"Eloss", "deltaT"});
+  //double deltaT = 0.0;
+  //double Tequila_deltaT_Max = 0.03 + rounding_error;
 
-  if (deltaT > Tequila_deltaT_Max) {
-    JSWARN << "Timestep for Tequila ( deltaT = " << deltaT
-           << " ) is too large. "
-           << "Please choose a detaT smaller than or equal to 0.03 in the XML "
-              "file.";
-    throw std::runtime_error(
-        "Tequila not properly initialized in XML file ...");
-  }
+  //deltaT = GetXMLElementDouble({"Eloss", "deltaT"});
+
+  //if (deltaT > Tequila_deltaT_Max) {
+  //  JSWARN << "Timestep for Tequila ( deltaT = " << deltaT
+  //         << " ) is too large. "
+  //         << "Please choose a detaT smaller than or equal to 0.03 in the XML "
+  //            "file.";
+  //  throw std::runtime_error(
+  //      "Tequila not properly initialized in XML file ...");
+  //}
 
   string s = GetXMLElementText({"Eloss", "Tequila", "name"});
-  JSDEBUG << s << " to be initilizied ...";
-
-  Q0 = GetXMLElementDouble({"Eloss", "Tequila", "Q0"});
+  JSDEBUG << s << " to be initializied ...";
   alpha_s = GetXMLElementDouble({"Eloss", "Tequila", "alpha_s"});
-  pcut = GetXMLElementDouble({"Eloss", "Tequila", "pcut"});
+  muqperp_over_T = GetXMLElementDouble({"Eloss", "Tequila", "muqperp_over_T"});
+  Q0 = GetXMLElementDouble({"Eloss", "Tequila", "Q0"});
   hydro_Tc = GetXMLElementDouble({"Eloss", "Tequila", "hydro_Tc"});
+  //pcut = GetXMLElementDouble({"Eloss", "Tequila", "pcut"});
+  path_to_tables=GetXMLElementText({"Eloss", "Tequila", "tables_path"});
+  muomega_over_T =  GetXMLElementDouble({"Eloss", "Tequila", "muomega_over_T"});
   recoil_on = GetXMLElementInt({"Eloss", "Tequila", "recoil_on"});
 
   g = sqrt(4. * M_PI * alpha_s);
   alpha_em = 1. / 137.;
   hydro_tStart = 0.6;
 
-  // Path to additional data
-  PathToTables = GetXMLElementText({"Eloss", "Tequila", "path"});
 
-  // Initialize random number distribution
-  ZeroOneDistribution = uniform_real_distribution<double>{0.0, 1.0};
 
-  readRadiativeRate(&dat, &Gam);
-  readElasticRateOmega();
-  readElasticRateQ();
+
+
+
+
+
+
+    ZeroOneDistribution = uniform_real_distribution<double> { 0.0, 1.0 }; 
+	
+    // Load elastic rate
+    JSINFO << "Load elastic rate... "; 
+    LoadElasticTables(); 
+
+    // Load differential rate
+    allocate_memory_for_radiative_rate_table();
+
+    JSINFO << "Loading differential collinear rate...\n";
+    // const std::string location_of_pretabulated_collinear_rates="./Tequila/";
+    // Either compute or read from file the collinear differential rates and load them into member array "differential_rate_p_omega_qperp[][][]"
+    load_differential_rate(alpha_s, alpha_EM, nf, path_to_tables);
+    // Compute total rate from differential rate and save in member array "rate_p[]"
+    JSINFO << "Computing integrated collinear rate...\n";
+    evaluate_integrated_rate(muomega_over_T, differential_rate_qqg_p_omega_qperp,rate_qqg_p, qqg); 
+    evaluate_integrated_rate(muomega_over_T, differential_rate_ggg_p_omega_qperp,rate_ggg_p, ggg);
+    evaluate_integrated_rate(muomega_over_T, differential_rate_gqq_p_omega_qperp,rate_gqq_p, gqq);
+    JSINFO << "Done computing integrated collinear rate.\n";
+
+
 }
 
 void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2,
